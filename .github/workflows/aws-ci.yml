@@ -38,7 +38,7 @@ jobs:
               -e "s|\${SPRING_DATASOURCE_USERNAME}|${{ secrets.SPRING_DATASOURCE_USERNAME }}|g" \
               -e "s|\${SPRING_DATASOURCE_PASSWORD}|${{ secrets.SPRING_DATASOURCE_PASSWORD }}|g" \
               -e "s|\${JWT_SECRET}|${{ secrets.JWT_SECRET }}|g" \
-              task-definition.json > task-definition-rendered.json
+              infra/ecs/task-definition.json > task-definition-rendered.json
 
       - name: Register new task definition
         id: taskdef
