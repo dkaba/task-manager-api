@@ -1,0 +1,54 @@
+{
+  "family": "task-manager-task",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+
+  "executionRoleArn": "arn:aws:iam::387748308903:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::387748308903:role/ecsTaskRole",
+
+  "containerDefinitions": [
+    {
+      "name": "task-manager-api",
+      "image": "387748308903.dkr.ecr.eu-north-1.amazonaws.com/task-manager/prod/api:latest",
+
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "protocol": "tcp"
+        }
+      ],
+
+      "essential": true,
+
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/task-manager",
+          "awslogs-region": "eu-north-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+
+      "environment": [
+        {
+          "name": "SPRING_DATASOURCE_URL",
+          "value": "${SPRING_DATASOURCE_URL}"
+        },
+        {
+          "name": "SPRING_DATASOURCE_USERNAME",
+          "value": "${SPRING_DATASOURCE_USERNAME}"
+        },
+        {
+          "name": "SPRING_DATASOURCE_PASSWORD",
+          "value": "${SPRING_DATASOURCE_PASSWORD}"
+        },
+        {
+          "name": "JWT_SECRET",
+          "value": "${JWT_SECRET}"
+        }
+      ]
+    }
+  ]
+}

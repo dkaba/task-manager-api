@@ -1,11 +1,11 @@
-name: CI/CD - Build & Push to ECR
+name: CI/CD - Build, Push & Deploy to ECS
 
 on:
   push:
     branches: [ "main" ]
 
 jobs:
-  build-and-push:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -31,3 +31,27 @@ jobs:
         run: |
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Render task definition with secrets
+        run: |
+          sed -e "s|\${SPRING_DATASOURCE_URL}|${{ secrets.SPRING_DATASOURCE_URL }}|g" \
+              -e "s|\${SPRING_DATASOURCE_USERNAME}|${{ secrets.SPRING_DATASOURCE_USERNAME }}|g" \
+              -e "s|\${SPRING_DATASOURCE_PASSWORD}|${{ secrets.SPRING_DATASOURCE_PASSWORD }}|g" \
+              -e "s|\${JWT_SECRET}|${{ secrets.JWT_SECRET }}|g" \
+              task-definition.json > task-definition-rendered.json
+
+      - name: Register new task definition
+        id: taskdef
+        run: |
+          TASK_DEF_ARN=$(aws ecs register-task-definition \
+            --cli-input-json file://task-definition-rendered.json \
+            --query "taskDefinition.taskDefinitionArn" \
+            --output text)
+          echo "task_definition_arn=$TASK_DEF_ARN" >> $GITHUB_OUTPUT
+
+      - name: Update ECS service
+        run: |
+          aws ecs update-service \
+            --cluster task-manager-cluster \
+            --service task-manager-service \
+            --task-definition ${{ steps.taskdef.outputs.task_definition_arn }}
