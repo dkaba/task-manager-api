@@ -2,6 +2,7 @@ package com.davidkabamba.taskmanager.configuration;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
@@ -24,23 +25,26 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/api/tasks/**").hasRole("USER")   // règle spécifique AVANT anyRequest
-                        .anyRequest().authenticated()
-                );
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // ← autorise les preflight
+                        .requestMatchers("/auth/**").permitAll()  // login, signup
+                        .requestMatchers("/api/tasks/**").hasRole("USER")
+                        .anyRequest().authenticated()            // tout le reste protégé
+
+                )
+                .httpBasic(Customizer.withDefaults());
 
         return http.build();
     }
 
     @Bean
     public UserDetailsService userDetailsService() {
-
-        UserDetails user = User.withUsername("user")
-                .password("{noop}password123")   // mot de passe en clair pour test
+        UserDetails user = User.withDefaultPasswordEncoder()
+                .username("user")
+                .password("ton_mot_de_passe")
                 .roles("USER")
                 .build();
 
         return new InMemoryUserDetailsManager(user);
     }
+
 }
