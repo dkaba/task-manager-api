@@ -27,7 +27,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // ← autorise les preflight
                         .requestMatchers("/auth/**").permitAll()  // login, signup
-                        .requestMatchers("/api/tasks/**").hasRole("USER")
+                        .requestMatchers("/api/v1/tasks/**").hasRole("USER")
                         .anyRequest().authenticated()            // tout le reste protégé
 
                 )
